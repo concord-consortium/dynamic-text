@@ -1,5 +1,5 @@
-export type ReadAloudMessage =
+export type DynamicTextMessage =
   { type: "selected", id: string | null } |
   { type: "enabled", enabled: boolean };
 
-export type ReadAloudListener = (message: ReadAloudMessage) => void;
+export type DynamicTextListener = (message: DynamicTextMessage) => void;

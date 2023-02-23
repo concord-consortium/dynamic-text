@@ -1,9 +1,13 @@
 import React, {useRef, useState, useEffect, useCallback} from "react";
 import { v4 as uuid } from "uuid";
-import { ReadAloudManager } from "./manager";
-import { ReadAloudMessage } from "./types";
+import { DyanmicTextManager } from "./manager";
+import { DynamicTextMessage } from "./types";
 
-const addReadAloudTextStyles = () => {
+interface Props {
+  noReadAloud?: boolean;
+}
+
+const addDynamicTextStyles = () => {
 
   const element = document.createElement("style");
   element.setAttribute("type", "text/css");
@@ -16,11 +20,12 @@ const addReadAloudTextStyles = () => {
   `;
   document.getElementsByTagName("head")[0].appendChild(element);
 };
-addReadAloudTextStyles();
+addDynamicTextStyles();
 
-const readAloudManager = new ReadAloudManager()
+const dynamicTextManager = new DyanmicTextManager()
 
-export const ReadAloudText: React.FC = ({ children }) => {
+export const DynamicText: React.FC<Props> = ({ noReadAloud, children }) => {
+  const readAloud = !noReadAloud;
   const ref = useRef<HTMLDivElement | null>(null);
   const [id, setId] = useState("");
   const [enabled, setEnabled] = useState(false);
@@ -32,7 +37,7 @@ export const ReadAloudText: React.FC = ({ children }) => {
     setId(componentId);
 
     // this will need to change to an api message
-    readAloudManager.registerComponent(componentId, (message: ReadAloudMessage) => {
+    dynamicTextManager.registerComponent(componentId, (message: DynamicTextMessage) => {
       switch (message.type) {
         case "enabled":
           setEnabled(message.enabled);
@@ -43,21 +48,24 @@ export const ReadAloudText: React.FC = ({ children }) => {
       }
     });
 
-    return () => readAloudManager.unregisterComponent(componentId);
+    return () => dynamicTextManager.unregisterComponent(componentId);
   }, []);
 
   // select the component when clicked
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // this will need to change to an api message
-    readAloudManager.selectComponent(id, {
-      text: (ref.current?.innerText || "").trim()
+    dynamicTextManager.selectComponent(id, {
+      readAloud,
+      text: (ref.current?.innerText || "").trim(),
     });
   }, [id]);
 
   const className = [
-    enabled ? "readAloudTextEnabled" : "",
-    selected ? "readAloudTextSelected" : ""
+    readAloud && enabled ? "readAloudTextEnabled" : "",
+    readAloud && selected ? "readAloudTextSelected" : ""
   ].join(" ");
+
+  console.log({className, readAloud, enabled, selected});
 
   return (
     <div className={className} onClick={handleClick} ref={ref}>{children}</div>

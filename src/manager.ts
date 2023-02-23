@@ -1,21 +1,21 @@
-import { ReadAloudListener, ReadAloudMessage } from "./types";
+import { DynamicTextListener, DynamicTextMessage } from "./types";
 
 const params = new URLSearchParams(window.location.search);
-let readAloudRate = parseFloat(params.get("readAloudRate") || "1");
-if (isNaN(readAloudRate)) {
-  readAloudRate = 1;
+let rate = parseFloat(params.get("readAloudRate") || "1");
+if (isNaN(rate)) {
+  rate = 1;
 }
 
-export class ReadAloudManager {
+export class DyanmicTextManager {
   static SessionStorageKey = "readAloud";
   private enabled = false;
   private selectedComponentId: string | null = null;
-  private components: Record<string, ReadAloudListener> = {};
+  private components: Record<string, DynamicTextListener> = {};
 
   constructor() {
     let enabled = "false";
     try {
-      enabled = window.sessionStorage.getItem(ReadAloudManager.SessionStorageKey) || "false";
+      enabled = window.sessionStorage.getItem(DyanmicTextManager.SessionStorageKey) || "false";
     } catch (e) {
       // no-op
     }
@@ -40,13 +40,13 @@ export class ReadAloudManager {
     this.emit({ type: "selected", id: this.selectedComponentId });
 
     try {
-      window.sessionStorage.setItem(ReadAloudManager.SessionStorageKey, `${enabled}`);
+      window.sessionStorage.setItem(DyanmicTextManager.SessionStorageKey, `${enabled}`);
     } catch (e) {
       // no-op
     }
   }
 
-  public registerComponent(id: string, listener: ReadAloudListener) {
+  public registerComponent(id: string, listener: DynamicTextListener) {
     this.components[id] = listener;
     listener({ type: "enabled", enabled: this.enabled });
   }
@@ -59,8 +59,9 @@ export class ReadAloudManager {
     }
   }
 
-  public selectComponent(id: string | null, options?: {text: string}) {
+  public selectComponent(id: string | null, options?: {text: string, readAloud: boolean}) {
     const text = options?.text || "";
+    const readAloud = options?.readAloud || false;
 
     if (this.enabled) {
       if (this.selectedComponentId === id) {
@@ -69,12 +70,14 @@ export class ReadAloudManager {
         this.selectedComponentId = id;
       }
 
-      this.stopSpeaking();
+      if (readAloud) {
+        this.stopSpeaking();
+      }
       this.emit({ type: "selected", id: this.selectedComponentId });
 
-      if (this.selectedComponentId && (text.length > 0)) {
+      if (readAloud && this.selectedComponentId && (text.length > 0)) {
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = readAloudRate;
+        utterance.rate = rate;
         utterance.addEventListener("end", () => {
           // if this is still the currently selected component deselect it
           if (this.selectedComponentId === id) {
@@ -90,7 +93,7 @@ export class ReadAloudManager {
     window.speechSynthesis?.cancel();
   }
 
-  private emit(message: ReadAloudMessage) {
+  private emit(message: DynamicTextMessage) {
     Object.values(this.components).forEach(listener => listener(message));
   }
 }
