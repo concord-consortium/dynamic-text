@@ -1,5 +1,8 @@
 # output
-dist/
+build/
+/*.js
+/*.js.map
+/*.d.ts
 
 # Logs
 logs
