@@ -1,5 +1,7 @@
 import typescript from '@rollup/plugin-typescript';
 import dts from "rollup-plugin-dts";
+
+const external = ['react', '@concord-consortium/lara-interactive-api'];
 const config = [
   // component and manager together
   {
@@ -9,7 +11,7 @@ const config = [
       format: 'cjs',
       sourcemap: true,
     },
-    external: ['react'],
+    external,
     plugins: [typescript()]
   },
   // component split into its one bundle
@@ -20,7 +22,7 @@ const config = [
       format: 'cjs',
       sourcemap: true,
     },
-    external: ['react'],
+    external,
     plugins: [typescript()]
   },
   // manager split into its own bundle
@@ -31,7 +33,7 @@ const config = [
       format: 'cjs',
       sourcemap: true,
     },
-    external: ['react'],
+    external,
     plugins: [typescript()]
   },
   {

@@ -1,6 +1,6 @@
 {
   "name": "@concord-consortium/dynamic-text",
-  "version": "1.0.0",
+  "version": "1.0.0-pre.1",
   "description": "Dynamic text manager and React component",
   "main": "index.js",
   "types": "index.d.ts",
@@ -13,7 +13,8 @@
     "build:dev": "webpack --mode development",
     "build:tsc": "tsc",
     "build:rollup": "rollup --config",
-    "test": "npm test"
+    "test": "npm test",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -26,7 +27,8 @@
   },
   "homepage": "https://github.com/concord-consortium/dynamic-text#readme",
   "dependencies": {
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "@concord-consortium/lara-interactive-api": "^1.8.0-pre.1"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.0.0",
@@ -40,7 +42,6 @@
     "typescript": "^4.9.5"
   },
   "peerDependencies": {
-    "@concord-consortium/lara-interactive-api": "^1.7.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2"
   }

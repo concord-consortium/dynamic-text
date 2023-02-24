@@ -1,10 +1,11 @@
-import React, {useRef, useState, useEffect, useCallback} from "react";
+import React, {useRef, useState, useEffect, useCallback, useContext} from "react";
 import { v4 as uuid } from "uuid";
-import { DyanmicTextManager } from "./manager";
-import { DynamicTextMessage } from "./types";
+import { useDynamicTextContext } from "./context";
+import { DynamicTextInterface, DynamicTextMessage } from "./types";
 
 interface Props {
   noReadAloud?: boolean;
+  context?: DynamicTextInterface; // allows context to optionally be passed as a prop
 }
 
 const addDynamicTextStyles = () => {
@@ -22,9 +23,8 @@ const addDynamicTextStyles = () => {
 };
 addDynamicTextStyles();
 
-const dynamicTextManager = new DyanmicTextManager()
-
-export const DynamicText: React.FC<Props> = ({ noReadAloud, children }) => {
+export const DynamicText: React.FC<Props> = ({ noReadAloud, children, context }) => {
+  const dynamicText = context || useDynamicTextContext();
   const readAloud = !noReadAloud;
   const ref = useRef<HTMLDivElement | null>(null);
   const [id, setId] = useState("");
@@ -37,7 +37,7 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, children }) => {
     setId(componentId);
 
     // this will need to change to an api message
-    dynamicTextManager.registerComponent(componentId, (message: DynamicTextMessage) => {
+    dynamicText.registerComponent(componentId, (message: DynamicTextMessage) => {
       switch (message.type) {
         case "enabled":
           setEnabled(message.enabled);
@@ -48,13 +48,13 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, children }) => {
       }
     });
 
-    return () => dynamicTextManager.unregisterComponent(componentId);
+    return () => dynamicText.unregisterComponent(componentId);
   }, []);
 
   // select the component when clicked
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     // this will need to change to an api message
-    dynamicTextManager.selectComponent(id, {
+    dynamicText.selectComponent(id, {
       readAloud,
       text: (ref.current?.innerText || "").trim(),
     });
@@ -64,8 +64,6 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, children }) => {
     readAloud && enabled ? "readAloudTextEnabled" : "",
     readAloud && selected ? "readAloudTextSelected" : ""
   ].join(" ");
-
-  console.log({className, readAloud, enabled, selected});
 
   return (
     <div className={className} onClick={handleClick} ref={ref}>{children}</div>

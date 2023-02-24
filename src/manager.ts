@@ -1,4 +1,4 @@
-import { DynamicTextListener, DynamicTextMessage } from "./types";
+import { DynamicTextListener, DynamicTextInterface, DynamicTextMessage, SelectComponentOptions } from "./types";
 
 const params = new URLSearchParams(window.location.search);
 let rate = parseFloat(params.get("readAloudRate") || "1");
@@ -6,7 +6,7 @@ if (isNaN(rate)) {
   rate = 1;
 }
 
-export class DyanmicTextManager {
+export class DynamicTextManager implements DynamicTextInterface {
   static SessionStorageKey = "readAloud";
   private enabled = false;
   private selectedComponentId: string | null = null;
@@ -15,7 +15,7 @@ export class DyanmicTextManager {
   constructor() {
     let enabled = "false";
     try {
-      enabled = window.sessionStorage.getItem(DyanmicTextManager.SessionStorageKey) || "false";
+      enabled = window.sessionStorage.getItem(DynamicTextManager.SessionStorageKey) || "false";
     } catch (e) {
       // no-op
     }
@@ -40,7 +40,7 @@ export class DyanmicTextManager {
     this.emit({ type: "selected", id: this.selectedComponentId });
 
     try {
-      window.sessionStorage.setItem(DyanmicTextManager.SessionStorageKey, `${enabled}`);
+      window.sessionStorage.setItem(DynamicTextManager.SessionStorageKey, `${enabled}`);
     } catch (e) {
       // no-op
     }
@@ -59,7 +59,7 @@ export class DyanmicTextManager {
     }
   }
 
-  public selectComponent(id: string | null, options?: {text: string, readAloud: boolean}) {
+  public selectComponent(id: string | null, options?: SelectComponentOptions) {
     const text = options?.text || "";
     const readAloud = options?.readAloud || false;
 
