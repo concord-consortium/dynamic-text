@@ -7,11 +7,16 @@ DynamicTextContext.displayName = "DynamicTextContext";
 export const useDynamicTextContext = () => {
   const currentDynamicTextContext = useContext(DynamicTextContext);
 
+  /*
+
+  remove to see if tests are easier
+
   if (!currentDynamicTextContext) {
     throw new Error(
       "useDynamicTextContext has to be used within <DynamicTextContext.Provider>"
     );
   }
+  */
 
-  return currentDynamicTextContext;
+  return currentDynamicTextContext!;
 };

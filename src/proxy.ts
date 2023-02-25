@@ -4,22 +4,25 @@ import {getClient, ICustomMessage, sendCustomMessage} from "@concord-consortium/
 import { DynamicTextCustomMessageType, DynamicTextInterface, DynamicTextListener, DynamicTextMessage, SelectComponentOptions } from "./types";
 
 export class DynamicTextProxy implements DynamicTextInterface {
-  private listener: DynamicTextListener|null = null;
+  private listeners: Record<string,DynamicTextListener> = {};
 
   constructor() {
     getClient().addListener("customMessage", (message: ICustomMessage) => {
       if (message.type === DynamicTextCustomMessageType) {
-        this.listener?.(message.content as DynamicTextMessage);
+        Object.values(this.listeners).forEach(listener => {
+          listener(message.content as DynamicTextMessage);
+        });
       }
     });
   }
 
   public registerComponent(id: string, listener: DynamicTextListener) {
-    this.listener = listener;
+    this.listeners[id] = listener;
     this.sendCustomMessage({type: "register", id});
   }
 
   public unregisterComponent(id: string) {
+    delete this.listeners[id];
     this.sendCustomMessage({type: "unregister", id});
   }
 
