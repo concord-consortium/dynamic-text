@@ -10,7 +10,6 @@
   },
   "scripts": {
     "build": "run-s build:tsc build:rollup",
-    "build:dev": "webpack --mode development",
     "build:tsc": "tsc",
     "build:rollup": "rollup --config",
     "test": "npm test",
