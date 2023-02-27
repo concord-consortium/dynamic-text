@@ -39,7 +39,7 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, children, context })
     // this will need to change to an api message
     dynamicText.registerComponent(componentId, (message: DynamicTextMessage) => {
       switch (message.type) {
-        case "enabled":
+        case "readAloudEnabled":
           setEnabled(message.enabled);
           break;
         case "selected":

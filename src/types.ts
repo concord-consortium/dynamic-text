@@ -15,7 +15,7 @@ export type SelectComponentOptions = {
 
 export type DynamicTextMessage =
   { type: "selected", id: string | null } |
-  { type: "enabled", enabled: boolean } |
+  { type: "readAloudEnabled", enabled: boolean } |
   { type: "register", id: string } |
   { type: "unregister", id: string } |
   { type: "select", id: string|null, options?: SelectComponentOptions };

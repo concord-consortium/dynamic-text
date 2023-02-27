@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import {getClient, ICustomMessage, sendCustomMessage} from "@concord-consortium/lara-interactive-api";
 
 import { DynamicTextCustomMessageType, DynamicTextInterface, DynamicTextListener, DynamicTextMessage, SelectComponentOptions } from "./types";
@@ -39,14 +38,7 @@ export class DynamicTextProxy implements DynamicTextInterface {
   }
 }
 
-export const useDynamicTextProxy = () => {
-  const [proxy, setProxy] = useState<DynamicTextProxy>();
-
-  useEffect(() => {
-    if (!proxy) {
-      setProxy(new DynamicTextProxy())
-    }
-  }, [proxy]);
-
-  return proxy as DynamicTextProxy;
-}
+// hook to return singleton instance - this needs to exist on initial render
+// so useEffect() can't be used
+const proxy = new DynamicTextProxy();
+export const useDynamicTextProxy = () => proxy;

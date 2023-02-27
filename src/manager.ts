@@ -10,44 +10,55 @@ if (isNaN(rate)) {
   rate = 1;
 }
 
+type DynamicTextSessionStorage = {
+  readAloudEnabled: boolean;
+}
+
+const defaultSessionStorage: DynamicTextSessionStorage = {
+  readAloudEnabled: false
+}
+
 export class DynamicTextManager implements DynamicTextInterface {
-  static SessionStorageKey = "readAloud";
-  private enabled = false;
+  static SessionStorageKey = "dynamicTextSettings";
+  private readAloudEnabled = false;
   private selectedComponentId: string | null = null;
-  private selectedComponentText: string | null = null;
   private components: Record<string, DynamicTextListener> = {};
   private onEvent: (event: SelectComponentEvent) => void;
+  private sessionStorage: DynamicTextSessionStorage;
+  private currentUtterance: SpeechSynthesisUtterance|null = null;
 
   constructor(options: DynamicTextManagerOptions) {
     this.onEvent = options.onEvent;
-    let enabled = "false";
+
+    this.sessionStorage = defaultSessionStorage;
     try {
-      enabled = window.sessionStorage.getItem(DynamicTextManager.SessionStorageKey) || "false";
+      this.sessionStorage = JSON.parse(window.sessionStorage.getItem(DynamicTextManager.SessionStorageKey) || "") || defaultSessionStorage;
     } catch (e) {
       // no-op
     }
-    this.enabled = this.isAvailable && enabled === "true";
+    this.readAloudEnabled = this.isReadAloudAvailable && this.sessionStorage.readAloudEnabled;
   }
 
-  public get isAvailable() {
+  public get isReadAloudAvailable() {
     return !!window.speechSynthesis;
   }
 
-  public get isEnabled() {
-    return this.enabled;
+  public get isReadAloudEnabled() {
+    return this.readAloudEnabled;
   }
 
-  public enable(enabled: boolean) {
-    this.enabled = enabled;
+  public enableReadAloud(enabled: boolean) {
+    this.readAloudEnabled = enabled;
     if (!enabled) {
       this.selectedComponentId = null;
     }
     this.stopSpeaking();
-    this.emit({ type: "enabled", enabled });
+    this.emit({ type: "readAloudEnabled", enabled });
     this.emit({ type: "selected", id: this.selectedComponentId });
 
     try {
-      window.sessionStorage.setItem(DynamicTextManager.SessionStorageKey, `${enabled}`);
+      this.sessionStorage.readAloudEnabled = enabled;
+      window.sessionStorage.setItem(DynamicTextManager.SessionStorageKey, JSON.stringify(this.sessionStorage));
     } catch (e) {
       // no-op
     }
@@ -55,7 +66,7 @@ export class DynamicTextManager implements DynamicTextInterface {
 
   public registerComponent(id: string, listener: DynamicTextListener) {
     this.components[id] = listener;
-    listener({ type: "enabled", enabled: this.enabled });
+    listener({ type: "readAloudEnabled", enabled: this.readAloudEnabled });
   }
 
   public unregisterComponent(id: string) {
@@ -71,36 +82,41 @@ export class DynamicTextManager implements DynamicTextInterface {
     const readAloud = options?.readAloud || false;
     const extraLoggingInfo = options?.extraLoggingInfo;
 
-    if (this.enabled) {
-      if (this.selectedComponentId === id) {
-        if (readAloud && this.selectedComponentText) {
-          this.onEvent({type: "readAloudCanceled", text: this.selectedComponentText, extraLoggingInfo});
+    // always maintain the component selection
+    if (this.selectedComponentId === id) {
+      if (this.currentUtterance) {
+        this.onEvent({type: "readAloudCanceled", text: this.currentUtterance.text, extraLoggingInfo});
+      }
+      this.selectedComponentId = null;
+    } else {
+      this.selectedComponentId = id;
+    }
+
+    // nothing left to do if not enabled
+    if (!this.readAloudEnabled) {
+      return;
+    }
+
+    if (readAloud) {
+      this.stopSpeaking();
+    }
+    this.emit({ type: "selected", id: this.selectedComponentId });
+
+    if (readAloud && this.selectedComponentId && (text.length > 0)) {
+      this.currentUtterance = new SpeechSynthesisUtterance(text);
+      this.currentUtterance.rate = rate;
+      this.currentUtterance.addEventListener("end", () => {
+        // mark that this utterance is complete
+        this.currentUtterance = null;
+
+        // if this is still the currently selected component deselect it
+        if (this.selectedComponentId === id) {
+          this.onEvent({type: "readAloudComplete", text, extraLoggingInfo});
+          this.selectComponent(null);
         }
-        this.selectedComponentId = null;
-        this.selectedComponentText = null;
-      } else {
-        this.selectedComponentId = id;
-        this.selectedComponentText = text;
-      }
-
-      if (readAloud) {
-        this.stopSpeaking();
-      }
-      this.emit({ type: "selected", id: this.selectedComponentId });
-
-      if (readAloud && this.selectedComponentId && (text.length > 0)) {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = rate;
-        utterance.addEventListener("end", () => {
-          // if this is still the currently selected component deselect it
-          if (this.selectedComponentId === id) {
-            this.onEvent({type: "readAloudComplete", text, extraLoggingInfo});
-            this.selectComponent(null);
-          }
-        });
-        window.speechSynthesis.speak(utterance);
-        this.onEvent({type: "readAloud", text, extraLoggingInfo});
-      }
+      });
+      window.speechSynthesis.speak(this.currentUtterance);
+      this.onEvent({type: "readAloud", text, extraLoggingInfo});
     }
   }
 

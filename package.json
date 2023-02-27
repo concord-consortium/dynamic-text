@@ -1,6 +1,6 @@
 {
   "name": "@concord-consortium/dynamic-text",
-  "version": "1.0.0-pre.7",
+  "version": "1.0.0-pre.8",
   "description": "Dynamic text manager and React component",
   "main": "index.js",
   "types": "index.d.ts",
