@@ -1,4 +1,8 @@
-import { DynamicTextListener, DynamicTextInterface, DynamicTextMessage, SelectComponentOptions } from "./types";
+import { DynamicTextListener, DynamicTextInterface, DynamicTextMessage, SelectComponentOptions, SelectComponentEvent } from "./types";
+
+export interface DynamicTextManagerOptions {
+  onEvent: (event: SelectComponentEvent) => void;
+}
 
 const params = new URLSearchParams(window.location.search);
 let rate = parseFloat(params.get("readAloudRate") || "1");
@@ -12,8 +16,10 @@ export class DynamicTextManager implements DynamicTextInterface {
   private selectedComponentId: string | null = null;
   private selectedComponentText: string | null = null;
   private components: Record<string, DynamicTextListener> = {};
+  private onEvent: (event: SelectComponentEvent) => void;
 
-  constructor() {
+  constructor(options: DynamicTextManagerOptions) {
+    this.onEvent = options.onEvent;
     let enabled = "false";
     try {
       enabled = window.sessionStorage.getItem(DynamicTextManager.SessionStorageKey) || "false";
@@ -63,12 +69,12 @@ export class DynamicTextManager implements DynamicTextInterface {
   public selectComponent(id: string | null, options?: SelectComponentOptions) {
     const text = options?.text || "";
     const readAloud = options?.readAloud || false;
-    const onEvent = options?.onEvent;
+    const extraLoggingInfo = options?.extraLoggingInfo;
 
     if (this.enabled) {
       if (this.selectedComponentId === id) {
         if (readAloud && this.selectedComponentText) {
-          onEvent?.({type: "readAloudCanceled", text: this.selectedComponentText});
+          this.onEvent({type: "readAloudCanceled", text: this.selectedComponentText, extraLoggingInfo});
         }
         this.selectedComponentId = null;
         this.selectedComponentText = null;
@@ -88,12 +94,12 @@ export class DynamicTextManager implements DynamicTextInterface {
         utterance.addEventListener("end", () => {
           // if this is still the currently selected component deselect it
           if (this.selectedComponentId === id) {
-            onEvent?.({type: "readAloudComplete", text});
+            this.onEvent({type: "readAloudComplete", text, extraLoggingInfo});
             this.selectComponent(null);
           }
         });
         window.speechSynthesis.speak(utterance);
-        onEvent?.({type: "readAloud", text});
+        this.onEvent({type: "readAloud", text, extraLoggingInfo});
       }
     }
   }

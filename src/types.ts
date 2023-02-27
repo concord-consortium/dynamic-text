@@ -1,13 +1,16 @@
 export const DynamicTextCustomMessageType = "dynamicText";
+
+export type ExtraLoggingInfo = Record<string,any>;
+
 export type SelectComponentEvent =
-  {type: "readAloud", text: string} |
-  {type: "readAloudComplete", text: string} |
-  {type: "readAloudCanceled", text: string}
+  {type: "readAloud", text: string, extraLoggingInfo?: ExtraLoggingInfo} |
+  {type: "readAloudComplete", text: string, extraLoggingInfo?: ExtraLoggingInfo} |
+  {type: "readAloudCanceled", text: string, extraLoggingInfo?: ExtraLoggingInfo}
 
 export type SelectComponentOptions = {
   text: string;
   readAloud: boolean;
-  onEvent?: (event: SelectComponentEvent) => void;
+  extraLoggingInfo?: ExtraLoggingInfo;
 }
 
 export type DynamicTextMessage =
