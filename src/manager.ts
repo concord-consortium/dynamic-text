@@ -10,6 +10,7 @@ export class DynamicTextManager implements DynamicTextInterface {
   static SessionStorageKey = "readAloud";
   private enabled = false;
   private selectedComponentId: string | null = null;
+  private selectedComponentText: string | null = null;
   private components: Record<string, DynamicTextListener> = {};
 
   constructor() {
@@ -62,12 +63,18 @@ export class DynamicTextManager implements DynamicTextInterface {
   public selectComponent(id: string | null, options?: SelectComponentOptions) {
     const text = options?.text || "";
     const readAloud = options?.readAloud || false;
+    const onEvent = options?.onEvent;
 
     if (this.enabled) {
       if (this.selectedComponentId === id) {
+        if (readAloud && this.selectedComponentText) {
+          onEvent?.({type: "readAloudCanceled", text: this.selectedComponentText});
+        }
         this.selectedComponentId = null;
+        this.selectedComponentText = null;
       } else {
         this.selectedComponentId = id;
+        this.selectedComponentText = text;
       }
 
       if (readAloud) {
@@ -81,10 +88,12 @@ export class DynamicTextManager implements DynamicTextInterface {
         utterance.addEventListener("end", () => {
           // if this is still the currently selected component deselect it
           if (this.selectedComponentId === id) {
+            onEvent?.({type: "readAloudComplete", text});
             this.selectComponent(null);
           }
         });
         window.speechSynthesis.speak(utterance);
+        onEvent?.({type: "readAloud", text});
       }
     }
   }
