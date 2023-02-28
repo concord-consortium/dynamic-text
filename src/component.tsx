@@ -14,9 +14,9 @@ const addDynamicTextStyles = () => {
   element.setAttribute("type", "text/css");
   element.textContent = `
     .readAloudTextEnabled:hover, .readAloudTextSelected {
-      color: black;
-      background-color: #f8ff00;
-      cursor: pointer;
+      color: black !important;
+      background-color: #f8ff00 !important;
+      cursor: pointer !important;
     }
   `;
   document.getElementsByTagName("head")[0].appendChild(element);
