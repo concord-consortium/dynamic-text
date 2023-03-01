@@ -1,6 +1,6 @@
 {
   "name": "@concord-consortium/dynamic-text",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Dynamic text manager and React component",
   "main": "index.js",
   "types": "index.d.ts",
@@ -27,7 +27,7 @@
   "homepage": "https://github.com/concord-consortium/dynamic-text#readme",
   "dependencies": {
     "uuid": "^9.0.0",
-    "@concord-consortium/lara-interactive-api": "^1.8.0-pre.1"
+    "@concord-consortium/lara-interactive-api": "^1.8.0"
   },
   "devDependencies": {
     "@rollup/plugin-typescript": "^11.0.0",
