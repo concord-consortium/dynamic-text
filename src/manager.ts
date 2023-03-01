@@ -5,7 +5,7 @@ export interface DynamicTextManagerOptions {
 }
 
 const params = new URLSearchParams(window.location.search);
-let rate = parseFloat(params.get("readAloudRate") || "1");
+let rate = parseFloat(params.get("readAloudRate") || "0.7");
 if (isNaN(rate)) {
   rate = 1;
 }

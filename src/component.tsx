@@ -5,6 +5,7 @@ import { DynamicTextInterface, DynamicTextMessage } from "./types";
 
 interface Props {
   noReadAloud?: boolean;
+  inline?: boolean;
   context?: DynamicTextInterface; // allows context to optionally be passed as a prop
 }
 
@@ -23,7 +24,7 @@ const addDynamicTextStyles = () => {
 };
 addDynamicTextStyles();
 
-export const DynamicText: React.FC<Props> = ({ noReadAloud, children, context }) => {
+export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, context }) => {
   const dynamicText = context || useDynamicTextContext();
   const readAloud = !noReadAloud;
   const ref = useRef<HTMLDivElement | null>(null);
@@ -53,6 +54,12 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, children, context })
 
   // select the component when clicked
   const handleClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    // ignore clicks on links within dynamic text areas and glossary words
+    const target = e.target as HTMLElement|undefined;
+    if ((target?.tagName === "A") || target?.className.includes("GlossaryWord")) {
+      return;
+    }
+
     // this will need to change to an api message
     dynamicText.selectComponent(id, {
       readAloud,
@@ -64,6 +71,12 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, children, context })
     readAloud && enabled ? "readAloudTextEnabled" : "",
     readAloud && selected ? "readAloudTextSelected" : ""
   ].join(" ");
+
+  if (inline) {
+    return (
+      <span className={className} onClick={handleClick} ref={ref}>{children}</span>
+    );
+  }
 
   return (
     <div className={className} onClick={handleClick} ref={ref}>{children}</div>
