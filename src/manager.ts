@@ -49,9 +49,7 @@ export class DynamicTextManager implements DynamicTextInterface {
 
   public enableReadAloud(enabled: boolean) {
     this.readAloudEnabled = enabled;
-    if (!enabled) {
-      this.selectedComponentId = null;
-    }
+    this.selectedComponentId = null;
     this.stopSpeaking();
     this.emit({ type: "readAloudEnabled", enabled });
     this.emit({ type: "selected", id: this.selectedComponentId });
@@ -82,7 +80,11 @@ export class DynamicTextManager implements DynamicTextInterface {
     const readAloud = options?.readAloud || false;
     const extraLoggingInfo = options?.extraLoggingInfo;
 
-    // always maintain the component selection
+    // nothing to do if not enabled
+    if (!this.readAloudEnabled) {
+      return;
+    }
+
     if (this.selectedComponentId === id) {
       if (this.currentUtterance) {
         this.onEvent({type: "readAloudCanceled", text: this.currentUtterance.text, extraLoggingInfo});
@@ -90,11 +92,6 @@ export class DynamicTextManager implements DynamicTextInterface {
       this.selectedComponentId = null;
     } else {
       this.selectedComponentId = id;
-    }
-
-    // nothing left to do if not enabled
-    if (!this.readAloudEnabled) {
-      return;
     }
 
     if (readAloud) {
