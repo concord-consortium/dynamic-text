@@ -47,18 +47,21 @@ export class DynamicTextManager implements DynamicTextInterface {
     return this.readAloudEnabled;
   }
 
-  public enableReadAloud(enabled: boolean) {
+  public enableReadAloud(options: {enabled: boolean, saveSetting: boolean}) {
+    const {enabled, saveSetting} = options;
     this.readAloudEnabled = enabled;
     this.selectedComponentId = null;
     this.stopSpeaking();
     this.emit({ type: "readAloudEnabled", enabled });
     this.emit({ type: "selected", id: this.selectedComponentId });
 
-    try {
-      this.sessionStorage.readAloudEnabled = enabled;
-      window.sessionStorage.setItem(DynamicTextManager.SessionStorageKey, JSON.stringify(this.sessionStorage));
-    } catch (e) {
-      // no-op
+    if (saveSetting) {
+      try {
+        this.sessionStorage.readAloudEnabled = enabled;
+        window.sessionStorage.setItem(DynamicTextManager.SessionStorageKey, JSON.stringify(this.sessionStorage));
+      } catch (e) {
+        // no-op
+      }
     }
   }
 
