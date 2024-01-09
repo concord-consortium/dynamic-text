@@ -13,12 +13,23 @@ export type SelectComponentOptions = {
   extraLoggingInfo?: ExtraLoggingInfo;
 }
 
+export type WordUtteredOptions = {
+  word: string;
+  wordIndex: number;
+}
+
+export type WordInstance = [HTMLElement, number];
+export type WordInstanceMap = Record<string, WordInstance[]|undefined>;
+
 export type DynamicTextMessage =
   { type: "selected", id: string | null } |
   { type: "readAloudEnabled", enabled: boolean } |
   { type: "register", id: string } |
   { type: "unregister", id: string } |
-  { type: "select", id: string|null, options?: SelectComponentOptions };
+  { type: "select", id: string|null, options?: SelectComponentOptions } |
+  { type: "speechStarting", id: string } |
+  { type: "wordUttered", id: string, options: WordUtteredOptions }
+  ;
 
 export type DynamicTextListener = (message: DynamicTextMessage) => void;
 

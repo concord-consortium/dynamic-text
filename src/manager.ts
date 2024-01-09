@@ -103,8 +103,22 @@ export class DynamicTextManager implements DynamicTextInterface {
     this.emit({ type: "selected", id: this.selectedComponentId });
 
     if (readAloud && this.selectedComponentId && (text.length > 0)) {
+      const wordIndexes: Record<string,number> = {};
+
       this.currentUtterance = new SpeechSynthesisUtterance(text);
       this.currentUtterance.rate = rate;
+      this.currentUtterance.addEventListener("boundary", (e) => {
+        if (this.selectedComponentId && e.name === "word") {
+          // extract the word found at the spoken index
+          const match = text.substring(e.charIndex).trim().match(/^(\w)+/);
+          if (match) {
+            const word = match[0];
+            wordIndexes[word] = wordIndexes[word] ?? 0;
+            this.emit({type: "wordUttered", id: this.selectedComponentId, options: {word, wordIndex: wordIndexes[word]}});
+            wordIndexes[word]++;
+          }
+        }
+      });
       this.currentUtterance.addEventListener("end", () => {
         // mark that this utterance is complete
         this.currentUtterance = null;
@@ -115,6 +129,7 @@ export class DynamicTextManager implements DynamicTextInterface {
           this.selectComponent(null);
         }
       });
+      this.emit({type: "speechStarting", id: this.selectedComponentId});
       window.speechSynthesis.speak(this.currentUtterance);
       this.onEvent({type: "readAloud", text, extraLoggingInfo});
     }
