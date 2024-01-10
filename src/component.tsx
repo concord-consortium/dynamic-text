@@ -44,7 +44,7 @@ if (Highlight && highlights) {
   highlights.set("readAloudWordHighlight", highlight);
 }
 
-const wordRegExp = /\w+/g;
+const wordRegExp = /\w+(\-\w+)?|[~`!@#$%^&*()_+-={}\[\]:";'<>?,./]/g;
 
 export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, context }) => {
   const dynamicText = context || useDynamicTextContext();
@@ -63,6 +63,7 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
       const text = el.textContent || "";
       while ((match = wordRegExp.exec(text)) !== null) {
         const word = match[0];
+        console.log("DOM WORD", word);
         wordInstanceMap.current[word] = wordInstanceMap.current[word] ?? [];
         wordInstanceMap.current[word]?.push([el, match.index])
       }
@@ -98,6 +99,7 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
           break;
         case "wordUttered":
           if (message.id === componentId && highlight) {
+            console.log("WORD UTTERED", JSON.stringify(message.options));
             setHighlightWord(message.options);
           }
           break;
