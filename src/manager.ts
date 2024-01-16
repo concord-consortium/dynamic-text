@@ -1,5 +1,5 @@
-import { boundaryWordRegExp } from "./regexs";
 import { DynamicTextListener, DynamicTextInterface, DynamicTextMessage, SelectComponentOptions, SelectComponentEvent } from "./types";
+import { findWordAt } from "./word-parser";
 
 export interface DynamicTextManagerOptions {
   onEvent: (event: SelectComponentEvent) => void;
@@ -111,9 +111,8 @@ export class DynamicTextManager implements DynamicTextInterface {
       this.currentUtterance.addEventListener("boundary", (e) => {
         if (this.selectedComponentId && e.name === "word") {
           // extract the word found at the spoken index
-          const match = text.substring(e.charIndex).trim().match(boundaryWordRegExp);
-          if (match) {
-            const word = match[0];
+          const word = findWordAt(text, e.charIndex)
+          if (word !== undefined) {
             wordIndexes[word] = wordIndexes[word] ?? 0;
             this.emit({type: "wordUttered", id: this.selectedComponentId, options: {word, wordIndex: wordIndexes[word]}});
             wordIndexes[word]++;

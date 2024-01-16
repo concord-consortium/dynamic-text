@@ -21,6 +21,8 @@ export type WordUtteredOptions = {
 export type WordInstance = [HTMLElement, number];
 export type WordInstanceMap = Record<string, WordInstance[]|undefined>;
 
+export type ParsedWord = {word: string; index: number};
+
 export type DynamicTextMessage =
   { type: "selected", id: string | null } |
   { type: "readAloudEnabled", enabled: boolean } |

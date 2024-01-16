@@ -2,7 +2,7 @@ import React, {useRef, useState, useEffect, useCallback} from "react";
 import { v4 as uuid } from "uuid";
 import { useDynamicTextContext } from "./context";
 import { DynamicTextInterface, DynamicTextMessage, WordInstanceMap, WordUtteredOptions } from "./types";
-import { domTextNodeRegExp } from "./regexs";
+import { findWords } from "./word-parser";
 
 interface Props {
   noReadAloud?: boolean;
@@ -57,14 +57,11 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
 
   // depth-first walk of the DOM to gather word instances
   const walkDOMToGatherWords = (el: HTMLElement) => {
-    let match: RegExpExecArray | null;
     if (el.nodeType === Node.TEXT_NODE) {
-      const text = el.textContent || "";
-      while ((match = domTextNodeRegExp.exec(text)) !== null) {
-        const word = match[0];
-        console.log("DOM WORD", word);
+      const words = findWords(el.textContent || "")
+      for (const {word, index} of words) {
         wordInstanceMap.current[word] = wordInstanceMap.current[word] ?? [];
-        wordInstanceMap.current[word]?.push([el, match.index])
+        wordInstanceMap.current[word]?.push([el, index])
       }
     } else if (el.hasChildNodes()) {
       el.childNodes.forEach(child => walkDOMToGatherWords(child as HTMLElement));
@@ -98,7 +95,6 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
           break;
         case "wordUttered":
           if (message.id === componentId && highlight) {
-            console.log("WORD UTTERED", JSON.stringify(message.options));
             setHighlightWord(message.options);
           }
           break;
