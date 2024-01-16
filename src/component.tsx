@@ -2,6 +2,7 @@ import React, {useRef, useState, useEffect, useCallback} from "react";
 import { v4 as uuid } from "uuid";
 import { useDynamicTextContext } from "./context";
 import { DynamicTextInterface, DynamicTextMessage, WordInstanceMap, WordUtteredOptions } from "./types";
+import { domTextNodeRegExp } from "./regexs";
 
 interface Props {
   noReadAloud?: boolean;
@@ -44,8 +45,6 @@ if (Highlight && highlights) {
   highlights.set("readAloudWordHighlight", highlight);
 }
 
-const wordRegExp = /\w+(\-\w+)?|[~`!@#$%^&*()_+-={}\[\]:";'<>?,./]/g;
-
 export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, context }) => {
   const dynamicText = context || useDynamicTextContext();
   const readAloud = !noReadAloud;
@@ -61,7 +60,7 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
     let match: RegExpExecArray | null;
     if (el.nodeType === Node.TEXT_NODE) {
       const text = el.textContent || "";
-      while ((match = wordRegExp.exec(text)) !== null) {
+      while ((match = domTextNodeRegExp.exec(text)) !== null) {
         const word = match[0];
         console.log("DOM WORD", word);
         wordInstanceMap.current[word] = wordInstanceMap.current[word] ?? [];

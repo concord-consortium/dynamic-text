@@ -1,3 +1,4 @@
+import { boundaryWordRegExp } from "./regexs";
 import { DynamicTextListener, DynamicTextInterface, DynamicTextMessage, SelectComponentOptions, SelectComponentEvent } from "./types";
 
 export interface DynamicTextManagerOptions {
@@ -110,7 +111,7 @@ export class DynamicTextManager implements DynamicTextInterface {
       this.currentUtterance.addEventListener("boundary", (e) => {
         if (this.selectedComponentId && e.name === "word") {
           // extract the word found at the spoken index
-          const match = text.substring(e.charIndex).trim().match(/^(\w+(\-\w+)?)|([~`!@#$%^&*()_+-={}\[\]:";'<>?,./])/);
+          const match = text.substring(e.charIndex).trim().match(boundaryWordRegExp);
           if (match) {
             const word = match[0];
             wordIndexes[word] = wordIndexes[word] ?? 0;
