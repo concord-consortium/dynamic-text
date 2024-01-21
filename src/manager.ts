@@ -1,4 +1,5 @@
 import { DynamicTextListener, DynamicTextInterface, DynamicTextMessage, SelectComponentOptions, SelectComponentEvent } from "./types";
+import { findWordAt } from "./word-parser";
 
 export interface DynamicTextManagerOptions {
   onEvent: (event: SelectComponentEvent) => void;
@@ -103,8 +104,22 @@ export class DynamicTextManager implements DynamicTextInterface {
     this.emit({ type: "selected", id: this.selectedComponentId });
 
     if (readAloud && this.selectedComponentId && (text.length > 0)) {
+      const wordIndexes: Record<string,number> = {};
+
       this.currentUtterance = new SpeechSynthesisUtterance(text);
       this.currentUtterance.rate = rate;
+      this.currentUtterance.addEventListener("boundary", (e) => {
+        if (this.selectedComponentId && e.name === "word") {
+          // extract the word found at the spoken index
+          const parsedWord = findWordAt(text, e.charIndex)
+          if (parsedWord !== undefined) {
+            const {word} = parsedWord
+            wordIndexes[word] = wordIndexes[word] ?? 0;
+            this.emit({type: "wordUttered", id: this.selectedComponentId, options: {word, wordIndex: wordIndexes[word]}});
+            wordIndexes[word]++;
+          }
+        }
+      });
       this.currentUtterance.addEventListener("end", () => {
         // mark that this utterance is complete
         this.currentUtterance = null;
@@ -115,6 +130,7 @@ export class DynamicTextManager implements DynamicTextInterface {
           this.selectComponent(null);
         }
       });
+      this.emit({type: "speechStarting", id: this.selectedComponentId});
       window.speechSynthesis.speak(this.currentUtterance);
       this.onEvent({type: "readAloud", text, extraLoggingInfo});
     }
