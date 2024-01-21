@@ -53,18 +53,13 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
   const [enabled, setEnabled] = useState(false);
   const [selected, setSelected] = useState(false);
   const [highlightWord, setHighlightWord] = useState<WordUtteredOptions|undefined>(undefined);
-  const wordInstanceMap = useRef<WordInstanceMap>({});
+  const textNodes = useRef<HTMLElement[]>([]);
 
-  // depth-first walk of the DOM to gather word instances
-  const walkDOMToGatherWords = (el: HTMLElement) => {
+  const gatherTextNodes = (el: HTMLElement) => {
     if (el.nodeType === Node.TEXT_NODE) {
-      const words = findWords(el.textContent || "")
-      for (const {word, index} of words) {
-        wordInstanceMap.current[word] = wordInstanceMap.current[word] ?? [];
-        wordInstanceMap.current[word]?.push([el, index])
-      }
+      textNodes.current.push(el);
     } else if (el.hasChildNodes()) {
-      el.childNodes.forEach(child => walkDOMToGatherWords(child as HTMLElement));
+      el.childNodes.forEach(child => gatherTextNodes(child as HTMLElement));
     }
   }
 
@@ -87,9 +82,10 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
           break;
         case "speechStarting":
           if (message.id === componentId) {
-            wordInstanceMap.current = {};
+            textNodes.current = [];
             if (ref.current) {
-              walkDOMToGatherWords(ref.current);
+              gatherTextNodes(ref.current);
+              console.log("FOUND", textNodes.current)
             }
           }
           break;
@@ -115,10 +111,29 @@ export const DynamicText: React.FC<Props> = ({ noReadAloud, inline, children, co
 
     if (highlightWord) {
       const {word, wordIndex} = highlightWord;
-      const wordInstance = wordInstanceMap.current[word]?.[wordIndex];
-      if (wordInstance) {
+      console.log("HIGHLIGHT: SEARCH", word, wordIndex, textNodes.current);
+
+      let wordMatch: {el: HTMLElement, index: number}|undefined = undefined;
+      let wordMatchIndex = 0;
+      const wordMatchRegExp = new RegExp(`\\b${word}\\b`);
+      console.log("REGEXP", wordMatchRegExp)
+      for (let i = 0; !wordMatch && i < textNodes.current.length; i++) {
+        const el = textNodes.current[i];
+        let match: RegExpExecArray | null;
+        console.log("TEXT NODE", el.textContent)
+        while (!wordMatch && (match = wordMatchRegExp.exec(el.textContent ?? ""))) {
+          console.log("MATCH", match)
+          if (wordMatchIndex++ === wordIndex) {
+            wordMatch = {el, index: match.index}
+            console.log("HIGHLIGHT: FOUND", wordMatch);
+          }
+        }
+      }
+
+      if (wordMatch) {
+        console.log("HIGHLIGHT: MATCHING", wordMatch);
         const range = new Range();
-        const [el, index] = wordInstance;
+        const {el, index} = wordMatch;
         range.setStart(el, index);
         range.setEnd(el, index + word.length);
         highlight.add(range);

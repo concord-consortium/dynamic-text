@@ -111,9 +111,9 @@ export class DynamicTextManager implements DynamicTextInterface {
       this.currentUtterance.addEventListener("boundary", (e) => {
         if (this.selectedComponentId && e.name === "word") {
           // extract the word found at the spoken index
-          const parsedWord = findWordAt(text, e.charIndex)
-          if (parsedWord !== undefined) {
-            const {word} = parsedWord
+          const word = text.substring(e.charIndex, e.charIndex + e.charLength);
+          console.log("UTTERED", word);
+          if (word.length > 0) {
             wordIndexes[word] = wordIndexes[word] ?? 0;
             this.emit({type: "wordUttered", id: this.selectedComponentId, options: {word, wordIndex: wordIndexes[word]}});
             wordIndexes[word]++;
